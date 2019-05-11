@@ -17,14 +17,8 @@ class Node(object):
         self.feature = feature
         self.flag = flag
 
-    def brother(self):
-        if self.father is None:
-            bro = None
-        elif self.father.left is self:
-            bro = self.father.right
-        else:
-            bro = self.father.left
-        return bro
+    def is_leaf(self):
+        return 0 if self.left or self.right else 1
 
 
 class KDTree(object):
@@ -85,60 +79,36 @@ class KDTree(object):
             r = Node(center=datapoint, father=father, feature=feature, flag=median_flag)
         return r, np.array(left_data), np.array(right_data)
 
+    def nearest(self, x, kdtree):
+        '''在给定kd树中寻找与x最近的点'''
+        self.near_node = None
+        self.near_distance = math.inf
+
+        def find_near_node(node):
+            if node.is_leaf():
+                self.near_node = node
+                self.near_distance = _distance(x, node.center)
+                return
+            if node is not None:
+                distance_feature = x[node.feature] - node.flag
+                find_near_node(node.left if distance_feature < 0 else node.right)
+                check_distance = _distance(x, node.center)
+                if self.near_node is None or self.near_distance > check_distance:
+                    self.near_node = node
+                    self.near_distance = check_distance
+                if self.near_distance > abs(distance_feature):
+                    find_near_node(node.right if distance_feature < 0 else node.left)
+                print(self.near_node.center)
+
+        find_near_node(kdtree)
+        return self.near_node
+
 
 def pre_order(node):
     if node is not None:
         print(node.center, node.feature)
         pre_order(node.left)
         pre_order(node.right)
-
-
-def _find_leaf(x, kdtree, search_path=[]):
-    if kdtree.feature is not None:
-        search_path.append(kdtree)
-        if x[kdtree.feature] < kdtree.flag:
-            if kdtree.left:
-                p, search_path = _find_leaf(x, kdtree.left, search_path)
-            else:
-                p = kdtree
-                search_path.append(kdtree)
-        else:
-            if kdtree.right:
-                p, search_path = _find_leaf(x, kdtree.right, search_path)
-            else:
-                p = kdtree
-                search_path.append(kdtree)
-    else:
-        p = kdtree
-        search_path.append(kdtree)
-        return p, search_path
-    return p, search_path
-
-
-def nearest(x, kdtree):
-    '''在给定kd树中寻找与x最近的点'''
-    def find_near_node(node):
-        if node is not None:
-            leaf, search_path = _find_leaf(x, kdtree)
-            near_node = leaf
-            while(search_path):
-                finish_node = search_path[-1]
-                search_path = search_path[:-1]
-                near_distance = _distance(x, near_node.center)
-                check_node = search_path[-1]
-                check_distance = _distance(x, check_node.center)
-                if check_distance < near_distance:
-                    near_node = check_node
-                    near_distance = check_distance
-                distance_feature = x[check_node.feature]-check_node.flag
-                if near_distance > abs(distance_feature):
-                    if check_node.left is finish_node:
-                        find_near_node(check_node.right)
-                    else:
-                        find_near_node(check_node.left)
-        return near_node
-    near_node = find_near_node(kdtree)
-    return near_node
 
 
 def _distance(x, y):
@@ -160,5 +130,6 @@ if __name__ == '__main__':
     data = np.array([[2, 3], [5, 4], [9, 6], [4, 7], [8, 1], [7, 2]])
     T = KDTree()
     T.fit(data=data)
-    a = _find_leaf((2, 4.5), T.tree)
-    c = nearest((2, 4.5), T.tree)
+    x = (2, 2)
+    c = T.nearest(x, T.tree)
+    print(c.center)
