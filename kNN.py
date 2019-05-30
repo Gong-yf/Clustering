@@ -83,7 +83,6 @@ class KDTree(object):
         '''在给定kd树中寻找与x最近的点'''
         self.near_node = None
         self.near_distance = math.inf
-
         def find_near_node(node):
             if node.is_leaf():
                 self.near_node = node
@@ -99,9 +98,19 @@ class KDTree(object):
                 if self.near_distance > abs(distance_feature):
                     find_near_node(node.right if distance_feature < 0 else node.left)
                 print(self.near_node.center)
-
         find_near_node(kdtree)
         return self.near_node
+
+
+class KNN(object):
+    def __init__(self, train_data):
+        T = KDTree()
+        T.fit(data=train_data)
+        self.kdtree = T.tree
+        self.near_list = []
+    
+    def k_nearest(self,k = 1):
+        pass
 
 
 def pre_order(node):
@@ -118,18 +127,10 @@ def _distance(x, y):
         distance += math.pow(a - b, 2)
     return math.sqrt(distance)
 
-
-class KNN(object):
-    def __init__(self, train_data):
-        T = KDTree()
-        T.fit(data=train_data)
-        self.kdtree = T.tree
-
-
 if __name__ == '__main__':
     data = np.array([[2, 3], [5, 4], [9, 6], [4, 7], [8, 1], [7, 2]])
     T = KDTree()
     T.fit(data=data)
     x = (2, 2)
     c = T.nearest(x, T.tree)
-    print(c.center)
+    x_nearest = c.center
