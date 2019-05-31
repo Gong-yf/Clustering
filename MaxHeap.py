@@ -2,13 +2,16 @@
 """
 @author: yifan.gong
 """
+
+
 class MaxHeap(object):
     '''最大堆'''
-    def __init__(self, max_size=50, data=None):
+    def __init__(self, max_size=50, data=None, func=lambda x: x):
         self.max_size = max_size
-        self.data = data
         self.result_list = [None]*max_size
         self.size = 0
+        self.func = func
+        self.data = data
 
     '''判断堆是否已满'''
     @property
@@ -16,13 +19,13 @@ class MaxHeap(object):
         return self.size == self.max_size
 
     '''加入一个新值,如果队列已满，则替换掉最大的元素'''
-    def add(self, value):
+    def add(self, item):
         if self.is_full:
-            if value < self.result_list[0]:
-                self.result_list[0] = value
+            if self.func(item) < self.func(self.result_list[0]):
+                self.result_list[0] = item
                 self.shift_down(0)
         else:
-            self.result_list[self.size] = value
+            self.result_list[self.size] = item
             self.size += 1
             self.shift_up(self.size-1)
 
@@ -39,7 +42,7 @@ class MaxHeap(object):
     def shift_up(self, idx):
         assert idx < self.size, 'index out of range'
         parent = (idx-1)//2
-        while parent >= 0 and self.result_list[parent] < self.result_list[idx]:
+        while parent >= 0 and self.func(self.result_list[parent]) < self.func(self.result_list[idx]):
             self.result_list[parent], self.result_list[idx] = self.result_list[idx], self.result_list[parent]
             idx = parent
             parent = (idx-1)//2
@@ -47,9 +50,11 @@ class MaxHeap(object):
     def shift_down(self, idx):
         child = 2*(idx+1)-1
         while child < self.max_size and self.result_list[child]:
-            if child+1 < self.max_size and self.result_list[child+1] and self.result_list[child+1] > self.result_list[child]:
+            if child+1 < self.max_size and \
+                self.result_list[child+1] and \
+                    self.func(self.result_list[child+1]) > self.func(self.result_list[child]):
                 child += 1
-            if self.result_list[idx] < self.result_list[child]:
+            if self.func(self.result_list[idx]) < self.func(self.result_list[child]):
                 self.result_list[child], self.result_list[idx] = self.result_list[idx], self.result_list[child]
                 idx = child
             else:
@@ -62,11 +67,11 @@ class MaxHeap(object):
 
     '''堆排序：将堆顶元素依次推出'''
     def heapsort(self):
-        r = []
+        result = []
         self.fit()
         while self.size > 0:
-            r.append(self.pop())
-        return r
+            result.append(self.pop())
+        return result
 
 
 if __name__ == '__main__':
