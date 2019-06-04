@@ -4,6 +4,8 @@
 """
 
 
+from copy import deepcopy
+
 class MaxHeap(object):
     '''最大堆'''
     def __init__(self, max_size=50, data=None, func=lambda x: x):
@@ -30,11 +32,10 @@ class MaxHeap(object):
             self.shift_up(self.size-1)
 
     '''推出顶部元素（最大值）'''
-    def pop(self):
+    def poptop(self):
         assert self.size > 0, 'MaxHeap is empty.'
-        r = self.result_list[0]
-        self.result_list[0] = self.result_list[self.size-1]
-        self.result_list[self.size-1] = None
+        r = deepcopy(self.result_list[0])
+        self.result_list[0],self.result_list[self.size-1] = self.result_list[self.size-1],None
         self.size -= 1
         self.shift_down(0)
         return r
@@ -57,6 +58,7 @@ class MaxHeap(object):
             if self.func(self.result_list[idx]) < self.func(self.result_list[child]):
                 self.result_list[child], self.result_list[idx] = self.result_list[idx], self.result_list[child]
                 idx = child
+                child = 2*(idx+1)-1
             else:
                 break
 
@@ -70,13 +72,15 @@ class MaxHeap(object):
         result = []
         self.fit()
         while self.size > 0:
-            result.append(self.pop())
+            r = self.poptop()
+            result.append(r)
+            print(self.result_list)
         return result
 
 
 if __name__ == '__main__':
     import random
 
-    data = [random.randint(1, 100) for i in range(30)]
+    data = [random.randint(1, 100) for i in range(31)]
     mh = MaxHeap(50, data)
     sorted_list = mh.heapsort()
