@@ -6,78 +6,7 @@ Created on Thu May  9 11:00:15 2019
 """
 import numpy as np
 import math
-
-
-class MaxHeap(object):
-    '''最大堆'''
-    def __init__(self, max_size=50, data=None, func=lambda x: x):
-        self.max_size = max_size
-        self.result_list = [None]*max_size
-        self.size = 0
-        self.func = func
-        self.data = data
-
-    '''判断堆是否已满'''
-    @property
-    def is_full(self):
-        return self.size == self.max_size
-
-    '''加入一个新值,如果队列已满，则替换掉最大的元素'''
-    def add(self, item):
-        if self.is_full:
-            if self.func(item) < self.func(self.result_list[0]):
-                self.result_list[0] = item
-                self.shift_down(0)
-        else:
-            self.result_list[self.size] = item
-            self.size += 1
-            self.shift_up(self.size-1)
-
-    '''推出顶部元素（最大值）'''
-    def poptop(self):
-        assert self.size > 0, 'MaxHeap is empty.'
-        r = deepcopy(self.result_list[0])
-        self.result_list[0],self.result_list[self.size-1] = self.result_list[self.size-1],None
-        self.size -= 1
-        self.shift_down(0)
-        return r
-
-    def shift_up(self, idx):
-        assert idx < self.size, 'index out of range'
-        parent = (idx-1)//2
-        while parent >= 0 and self.func(self.result_list[parent]) < self.func(self.result_list[idx]):
-            self.result_list[parent], self.result_list[idx] = self.result_list[idx], self.result_list[parent]
-            idx = parent
-            parent = (idx-1)//2
-
-    def shift_down(self, idx):
-        child = 2*(idx+1)-1
-        while child < self.max_size and self.result_list[child]:
-            if child+1 < self.max_size and \
-                self.result_list[child+1] and \
-                    self.func(self.result_list[child+1]) > self.func(self.result_list[child]):
-                child += 1
-            if self.func(self.result_list[idx]) < self.func(self.result_list[child]):
-                self.result_list[child], self.result_list[idx] = self.result_list[idx], self.result_list[child]
-                idx = child
-                child = 2*(idx+1)-1
-            else:
-                break
-
-    '''生成最大堆：将data中元素依次加入'''
-    def fit(self):
-        for num in self.data:
-            self.add(num)
-
-    '''堆排序：将堆顶元素依次推出'''
-    def heapsort(self):
-        result = []
-        self.fit()
-        while self.size > 0:
-            r = self.poptop()
-            result.append(r)
-            print(self.result_list)
-        return result
+from MaxHeap import MaxHeap
 
 
 class Node(object):
@@ -158,7 +87,7 @@ class KDTree(object):
         self.near_distance = math.inf
 
         def find_near_node(node):
-            if node.is_leaf():
+            if node.is_leaf:
                 self.near_node = node
                 self.near_distance = _distance(x, node.center)
                 return
@@ -171,26 +100,41 @@ class KDTree(object):
                     self.near_distance = check_distance
                 if self.near_distance > abs(distance_feature):
                     find_near_node(node.right if distance_feature < 0 else node.left)
-                print(self.near_node.center)
         find_near_node(kdtree)
         return self.near_node
 
 
 class KNN(object):
     def __init__(self, train_data):
-        self.train_data = data
+        self.train_data = train_data
         T = KDTree()
         T.fit(data=train_data)
         self.kdtree = T.tree
         self.near_list = []
 
-    def k_nearest(self, k=1):
-        if len(self.train_data) < k:
-            mh = MaxHeap(max_size=k, data=self.train_data)
-            r = mh.heapsort()
-            return r
-        
+    def _k_nearest(self, x, k=1):
+        assert len(self.train_data) > k, 'k is larger than the size of data.'
+        mh = MaxHeap(max_size=k, func=lambda x: x[1])
 
+        def find_near_node(node):
+            if node is not None:
+                if node.is_leaf:
+                    mh.add((node.center, _distance(x, node.center)))
+                    return
+                distance_feature = x[node.feature] - node.flag
+                find_near_node(node.left if distance_feature < 0 else node.right)
+                check_distance = _distance(x, node.center)
+                near_distance = mh.result_list[0][1]
+                if (not mh.is_full) or near_distance > check_distance:
+                    mh.add((node.center, check_distance))
+                if (not mh.is_full) or near_distance > abs(distance_feature):
+                    find_near_node(node.right if distance_feature < 0 else node.left)
+        find_near_node(self.kdtree)
+        self.near_list = mh.result_list
+
+    def k_nearest(self, x, k=1):
+        self._k_nearest(x, k=k)
+        return self.near_list
 
 
 def pre_order(node):
@@ -209,9 +153,12 @@ def _distance(x, y):
 
 
 if __name__ == '__main__':
-    data = np.array([[2, 3], [5, 4], [9, 6], [4, 7], [8, 1], [7, 2]])
+    data = np.array([[2, 3], [5, 4], [9, 6], [4, 7], [8, 1], [7, 2], [3, 2]])
     T = KDTree()
     T.fit(data=data)
     x = (2, 2)
     c = T.nearest(x, T.tree)
     x_nearest = c.center
+
+    knn = KNN(data)
+    k_near = knn.k_nearest(x, k=5)
