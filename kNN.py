@@ -153,12 +153,17 @@ def _distance(x, y):
 
 
 if __name__ == '__main__':
-    data = np.array([[2, 3], [5, 4], [9, 6], [4, 7], [8, 1], [7, 2], [3, 2]])
-    T = KDTree()
-    T.fit(data=data)
-    x = (2, 2)
-    c = T.nearest(x, T.tree)
-    x_nearest = c.center
+    from matplotlib import pyplot as plt
+    data = 10*np.random.randn(100, 2)
+    fig1 = plt.figure(figsize=(8, 16))
+    ax1 = fig1.add_subplot(211)
+    ax1.scatter(data[:, 0], data[:, 1])
 
+    x = np.random.randn(1, 2)[0]
     knn = KNN(data)
     k_near = knn.k_nearest(x, k=5)
+    k_near_point = np.array([v[0] for v in k_near])
+    ax2 = fig1.add_subplot(212)
+    ax2.scatter(data[:, 0], data[:, 1])
+    ax2.scatter(k_near_point[:, 0], k_near_point[:, 1], c='yellow')
+    ax2.scatter(x[0], x[1], c='red')
