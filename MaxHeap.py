@@ -6,6 +6,7 @@
 
 from copy import deepcopy
 
+
 class MaxHeap(object):
     '''最大堆'''
     def __init__(self, max_size=50, data=None, func=lambda x: x):
@@ -35,7 +36,7 @@ class MaxHeap(object):
     def poptop(self):
         assert self.size > 0, 'MaxHeap is empty.'
         r = deepcopy(self.result_list[0])
-        self.result_list[0],self.result_list[self.size-1] = self.result_list[self.size-1],None
+        self.result_list[0], self.result_list[self.size-1] = self.result_list[self.size-1], None
         self.size -= 1
         self.shift_down(0)
         return r
